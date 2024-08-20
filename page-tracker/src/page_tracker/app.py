@@ -1,19 +1,22 @@
+import os
 from functools import lru_cache
 from flask import Flask
 from redis import Redis, RedisError
 
 app = Flask(__name__)
 
+
 @app.get("/")
 def index():
-     try:
+    try:
         page_views = redis().incr("page_views")
-     except RedisError:
+    except RedisError:
         app.logger.exception("Redis error")
         return "Sorry, something went wrong \N{pensive face}", 500
-     else:
+    else:
         return f"This page has been seen {page_views} times."
+
 
 @lru_cache(maxsize=None)
 def get_redis():
-    return Redis()
+    return Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
