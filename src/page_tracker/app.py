@@ -1,5 +1,5 @@
 import os
-from functools import lru_cache
+from functools import cache
 
 from flask import Flask
 from redis import Redis, RedisError
@@ -12,12 +12,12 @@ def index():
     try:
         page_views = redis().incr("page_views")
     except RedisError:
-        app.logger.exception("Redis error")
+        app.logger.exception("Redis error")  # pylint: disable=E1101
         return "Sorry, something went wrong \N{pensive face}", 500
     else:
         return f"This page has been seen {page_views} times."
 
 
-@lru_cache(maxsize=None)
-def get_redis():
+@cache
+def redis():
     return Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))

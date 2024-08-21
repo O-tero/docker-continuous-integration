@@ -1,4 +1,3 @@
-
 FROM python:3.11.2-slim-bullseye AS builder
 
 RUN apt-get update && \
@@ -19,14 +18,18 @@ RUN python -m pip install --upgrade pip setuptools && \
 COPY --chown=realpython src/ src/
 COPY --chown=realpython test/ test/
 
-RUN python -m pip install . -c constraints.txt && \
-    python -m pytest test/unit/ && \
-    python -m flake8 src/ && \
-    python -m isort src/ --check && \
-    python -m black src/ --check --quiet && \
-    python -m pylint src/ --disable=C0114,C0116,R1705 && \
-    python -m bandit -r src/ --quiet && \
-    python -m pip wheel --wheel-dir dist/ . -c constraints.txt
+RUN python -m pip install . -c constraints.txt
+
+# Add separate RUN commands to isolate the failing step
+RUN python -m pytest test/unit/
+RUN python -m flake8 src/
+RUN python -m isort src/ --check
+RUN python -m black src/ --check --quiet
+RUN python -m pylint src/ --disable=C0114,C0116,R1705
+RUN python -m bandit -r src/ --quiet
+
+# Build the wheel after all checks have passed
+RUN python -m pip wheel --wheel-dir dist/ . -c constraints.txt
 
 FROM python:3.11.2-slim-bullseye
 
